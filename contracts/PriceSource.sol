@@ -29,6 +29,7 @@ abstract contract PriceSource is Ownable, IPriceSource {
     function _getUnitValueInUSDT(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
     function _getUnitValueInUSDC(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
     function _getUnitValueInDAI(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
+
     function getUnitValueInAllStables(
         address _token
     )
