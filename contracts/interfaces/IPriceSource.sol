@@ -15,8 +15,21 @@ interface IPriceSource {
         address _token,
         uint256 _value
     ) external view returns (uint256 _exponentiated, int256 _normal);
-    function getValueInWETH(
+    function getValueInETH(
         address _token,
         uint256 _value
     ) external view returns (uint256 _exponentiated, int256 _normal);
+    function getUnitValueInAllStables(
+        address _token
+    )
+        external
+        view
+        returns (
+            uint256 _exponentiatedUSDTValue,
+            int256 _normalUSDTValue,
+            uint256 _exponentiatedUSDCValue,
+            int256 _normalUSDCValue,
+            uint256 _exponentiatedDAIValue,
+            int256 _normalDAIValue
+        );
 }
