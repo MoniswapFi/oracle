@@ -65,12 +65,12 @@ abstract contract PriceSource is Ownable, IPriceSource {
         address _token,
         uint256 _value
     ) external view returns (uint256 _avgExp, int256 _avgNormal) {
-        (, int256 _avgNormalUSD) = getAverageValueInUSD(_token, _value);
+        (uint256 _avgExpUSD, ) = getAverageValueInUSD(_token, _value);
         (, int256 _normalDAI) = _getUnitValueInDAI(_token);
 
         uint8 _decimal = ERC20(_token).decimals();
         (, uint256 _daiValue) = _normalDAI.toUint256().tryMul(_value);
-        (, uint256 _sum) = _daiValue.tryAdd(_avgNormalUSD);
+        (, uint256 _sum) = _daiValue.tryAdd(_avgExpUSD);
         (, _avgExp) = _sum.tryDiv(2);
         (, uint256 _avgNrm) = _avgExp.tryDiv(10 ** _decimal);
         _avgNormal = _avgNrm.toInt256();
