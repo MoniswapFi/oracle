@@ -61,7 +61,7 @@ abstract contract PriceSource is Ownable, IPriceSource {
         (, uint256 _usdcValue) = _normalUSDC.toUint256().tryMul(_value);
 
         (, uint256 _sum) = (_usdtValue / 10 ** 4).tryAdd(_usdcValue / 10 ** 4);
-        (, _avgExp) = _sum.tryDiv(2);
+        (, _avgExp) = _usdtValue == 0 || _usdcValue == 0 ? _sum.tryDiv(2) : _sum.tryDiv(1);
         (, uint256 _avgNrm) = (_avgExp * 10 ** 4).tryDiv(10 ** _decimal);
         _avgNormal = _avgNrm.toInt256();
     }
