@@ -48,6 +48,15 @@ contract Oracle is Ownable {
         return (_totalValueEXP / priceSources.length, _totalValueNormal / int256(priceSources.length));
     }
 
+    function getAverageValueInUSD(
+        IPriceSource _pS,
+        address _token,
+        uint256 _value
+    ) external view returns (uint256 _avgEXP, int256 _avgNormal) {
+        _checkPriceSource(_pS);
+        (_avgEXP, _avgNormal) = _pS.getAverageValueInUSD(_token, _value);
+    }
+
     function getAverageValueInAllStables(address _token, uint256 _value) external view returns (uint256, int256) {
         uint256 _totalValueEXP;
         int256 _totalValueNormal;
@@ -61,6 +70,15 @@ contract Oracle is Ownable {
         return (_totalValueEXP / priceSources.length, _totalValueNormal / int256(priceSources.length));
     }
 
+    function getAverageValueInAllStables(
+        IPriceSource _pS,
+        address _token,
+        uint256 _value
+    ) external view returns (uint256 _avgEXP, int256 _avgNormal) {
+        _checkPriceSource(_pS);
+        (_avgEXP, _avgNormal) = _pS.getAverageValueInAllStables(_token, _value);
+    }
+
     function getAverageValueInETH(address _token, uint256 _value) external view returns (uint256, int256) {
         uint256 _totalValueEXP;
         int256 _totalValueNormal;
@@ -72,5 +90,80 @@ contract Oracle is Ownable {
         }
 
         return (_totalValueEXP / priceSources.length, _totalValueNormal / int256(priceSources.length));
+    }
+
+    function getValueInETH(
+        IPriceSource _pS,
+        address _token,
+        uint256 _value
+    ) external view returns (uint256 _avgEXP, int256 _avgNormal) {
+        _checkPriceSource(_pS);
+        (_avgEXP, _avgNormal) = _pS.getValueInETH(_token, _value);
+    }
+
+    struct UnitValueInStablesPerSource {
+        address _sourceAddress;
+        string _sourceName;
+        uint256 _exponentiatedUSDTValue;
+        int256 _normalUSDTValue;
+        uint256 _exponentiatedUSDCValue;
+        int256 _normalUSDCValue;
+        uint256 _exponentiatedDAIValue;
+        int256 _normalDAIValue;
+    }
+
+    function getUnitValueInAllStables(address _token) external view returns (UnitValueInStablesPerSource[] memory) {
+        UnitValueInStablesPerSource[] memory _values;
+
+        for (uint i = 0; i < priceSources.length; i++) {
+            IPriceSource pS = priceSources[i];
+            (
+                uint256 _exponentiatedUSDTValue,
+                int256 _normalUSDTValue,
+                uint256 _exponentiatedUSDCValue,
+                int256 _normalUSDCValue,
+                uint256 _exponentiatedDAIValue,
+                int256 _normalDAIValue
+            ) = pS.getUnitValueInAllStables(_token);
+
+            _values[i] = UnitValueInStablesPerSource(
+                address(pS),
+                pS.name(),
+                _exponentiatedUSDTValue,
+                _normalUSDTValue,
+                _exponentiatedUSDCValue,
+                _normalUSDCValue,
+                _exponentiatedDAIValue,
+                _normalDAIValue
+            );
+        }
+
+        return _values;
+    }
+
+    function getUnitValueInAllStables(
+        IPriceSource _pS,
+        address _token
+    ) external view returns (UnitValueInStablesPerSource memory _values) {
+        _checkPriceSource(_pS);
+        (
+            uint256 _exponentiatedUSDTValue,
+            int256 _normalUSDTValue,
+            uint256 _exponentiatedUSDCValue,
+            int256 _normalUSDCValue,
+            uint256 _exponentiatedDAIValue,
+            int256 _normalDAIValue
+        ) = _pS.getUnitValueInAllStables(_token);
+
+        _values = UnitValueInStablesPerSource(
+            address(_pS),
+            _pS.name(),
+            _exponentiatedUSDTValue,
+            _normalUSDTValue,
+            _exponentiatedUSDCValue,
+            _normalUSDCValue,
+            _exponentiatedDAIValue,
+            _normalDAIValue
+        );
     }
 }
