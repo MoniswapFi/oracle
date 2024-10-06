@@ -34,20 +34,26 @@ contract MoniswapVolatilePriceSource is PriceSource {
         _poolAddress = abi.decode(_returnData, (address));
     }
 
-    function _getUnitValueInETH(address token) internal view override returns (uint256, int256) {
-        address pool = _getPool(token, weth);
+    function _deriveAmountOut(
+        address token0,
+        address token1,
+        uint256 _amountIn
+    ) internal view returns (uint256 amountOut) {
+        address pool = _getPool(token0, token1);
 
-        if (pool == address(0)) {
-            return (0, 0);
+        if (pool != address(0)) {
+            bytes memory _returnData = pool.functionStaticCall(
+                abi.encodeWithSelector(getAmountOutSelector, _amountIn, token0)
+            );
+
+            amountOut = abi.decode(_returnData, (uint256));
         }
+    }
 
+    function _getUnitValueInETH(address token) internal view override returns (uint256, int256) {
         uint8 _decimals = ERC20(token).decimals();
         uint256 _amountIn = 1 * 10 ** _decimals;
-        bytes memory _returnData = pool.functionStaticCall(
-            abi.encodeWithSelector(getAmountOutSelector, _amountIn, token)
-        );
-
-        uint256 amountOut = abi.decode(_returnData, (uint256));
+        uint256 amountOut = _deriveAmountOut(token, weth, _amountIn);
         uint256 amountOutEXP4 = amountOut * 10 ** 4;
         (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
 
@@ -56,32 +62,18 @@ contract MoniswapVolatilePriceSource is PriceSource {
 
     function _getUnitValueInUSDC(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
-        address _ethUSDCPool = _getPool(weth, usdc);
+        uint256 _ethUSDCAmountOut = _deriveAmountOut(weth, usdc, _valueInETH);
 
-        if (_valueInETH > 0 && _ethUSDCPool != address(0)) {
-            bytes memory _returnData = _ethUSDCPool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _valueInETH, weth)
-            );
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+        if (_valueInETH > 0 && _ethUSDCAmountOut > 0) {
             uint8 _decimals = ERC20(usdc).decimals();
-            uint256 amountOutEXP4 = amountOut * 10 ** 4;
+            uint256 amountOutEXP4 = _ethUSDCAmountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
-            return (amountOut, amountOutNormal.toInt256());
+            return (_ethUSDCAmountOut, amountOutNormal.toInt256());
         } else {
-            address pool = _getPool(token, usdc);
-
-            if (pool == address(0)) {
-                return (0, 0);
-            }
-
             uint8 _decimals = ERC20(token).decimals();
             uint8 _usdcDecimals = ERC20(usdc).decimals();
             uint256 _amountIn = 1 * 10 ** _decimals;
-            bytes memory _returnData = pool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _amountIn, token)
-            );
-
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+            uint256 amountOut = _deriveAmountOut(token, usdc, _amountIn);
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _usdcDecimals);
 
@@ -91,32 +83,18 @@ contract MoniswapVolatilePriceSource is PriceSource {
 
     function _getUnitValueInUSDT(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
-        address _ethUSDTPool = _getPool(weth, usdt);
+        uint256 _ethUSDTAmountOut = _deriveAmountOut(weth, usdt, _valueInETH);
 
-        if (_valueInETH > 0 && _ethUSDTPool != address(0)) {
-            bytes memory _returnData = _ethUSDTPool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _valueInETH, weth)
-            );
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+        if (_valueInETH > 0 && _ethUSDTAmountOut > 0) {
             uint8 _decimals = ERC20(usdt).decimals();
-            uint256 amountOutEXP4 = amountOut * 10 ** 4;
+            uint256 amountOutEXP4 = _ethUSDTAmountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
-            return (amountOut, amountOutNormal.toInt256());
+            return (_ethUSDTAmountOut, amountOutNormal.toInt256());
         } else {
-            address pool = _getPool(token, usdt);
-
-            if (pool == address(0)) {
-                return (0, 0);
-            }
-
             uint8 _decimals = ERC20(token).decimals();
             uint8 _usdtDecimals = ERC20(usdt).decimals();
             uint256 _amountIn = 1 * 10 ** _decimals;
-            bytes memory _returnData = pool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _amountIn, token)
-            );
-
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+            uint256 amountOut = _deriveAmountOut(token, usdt, _amountIn);
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _usdtDecimals);
 
@@ -126,32 +104,18 @@ contract MoniswapVolatilePriceSource is PriceSource {
 
     function _getUnitValueInDAI(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
-        address _ethDAIPool = _getPool(weth, dai);
+        uint256 _ethDAIAmountOut = _deriveAmountOut(weth, dai, _valueInETH);
 
-        if (_valueInETH > 0 && _ethDAIPool != address(0)) {
-            bytes memory _returnData = _ethDAIPool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _valueInETH, weth)
-            );
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+        if (_valueInETH > 0 && _ethDAIAmountOut > 0) {
             uint8 _decimals = ERC20(dai).decimals();
-            uint256 amountOutEXP4 = amountOut * 10 ** 4;
+            uint256 amountOutEXP4 = _ethDAIAmountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
-            return (amountOut, amountOutNormal.toInt256());
+            return (_ethDAIAmountOut, amountOutNormal.toInt256());
         } else {
-            address pool = _getPool(token, dai);
-
-            if (pool == address(0)) {
-                return (0, 0);
-            }
-
             uint8 _decimals = ERC20(token).decimals();
             uint8 _daiDecimals = ERC20(dai).decimals();
             uint256 _amountIn = 1 * 10 ** _decimals;
-            bytes memory _returnData = pool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _amountIn, token)
-            );
-
-            uint256 amountOut = abi.decode(_returnData, (uint256));
+            uint256 amountOut = _deriveAmountOut(token, dai, _amountIn);
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
             (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _daiDecimals);
 
