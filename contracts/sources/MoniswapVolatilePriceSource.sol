@@ -63,19 +63,20 @@ contract MoniswapVolatilePriceSource is PriceSource {
     function _getUnitValueInUSDC(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
         uint256 _ethUSDCAmountOut = _deriveAmountOut(weth, usdc, _valueInETH);
+        uint8 _usdcDecimals = ERC20(usdc).decimals();
+        _ethUSDCAmountOut = (_ethUSDCAmountOut * 10 ** 18) / 10 ** _usdcDecimals;
 
         if (_valueInETH > 0 && _ethUSDCAmountOut > 0) {
-            uint8 _decimals = ERC20(usdc).decimals();
             uint256 amountOutEXP4 = _ethUSDCAmountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
             return (_ethUSDCAmountOut, amountOutNormal.toInt256());
         } else {
-            uint8 _decimals = ERC20(token).decimals();
-            uint8 _usdcDecimals = ERC20(usdc).decimals();
-            uint256 _amountIn = 1 * 10 ** _decimals;
+            uint8 _tokenDecimals = ERC20(token).decimals();
+            uint256 _amountIn = 1 * 10 ** _tokenDecimals;
             uint256 amountOut = _deriveAmountOut(token, usdc, _amountIn);
+            amountOut = (amountOut * 10 ** 18) / 10 ** _usdcDecimals;
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _usdcDecimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
 
             return (amountOut, amountOutNormal.toInt256());
         }
@@ -84,19 +85,20 @@ contract MoniswapVolatilePriceSource is PriceSource {
     function _getUnitValueInUSDT(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
         uint256 _ethUSDTAmountOut = _deriveAmountOut(weth, usdt, _valueInETH);
+        uint8 _usdtDecimals = ERC20(usdt).decimals();
+        _ethUSDTAmountOut = (_ethUSDTAmountOut * 10 ** 18) / 10 ** _usdtDecimals;
 
         if (_valueInETH > 0 && _ethUSDTAmountOut > 0) {
-            uint8 _decimals = ERC20(usdt).decimals();
             uint256 amountOutEXP4 = _ethUSDTAmountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
             return (_ethUSDTAmountOut, amountOutNormal.toInt256());
         } else {
-            uint8 _decimals = ERC20(token).decimals();
-            uint8 _usdtDecimals = ERC20(usdt).decimals();
-            uint256 _amountIn = 1 * 10 ** _decimals;
+            uint8 _tokenDecimals = ERC20(token).decimals();
+            uint256 _amountIn = 1 * 10 ** _tokenDecimals;
             uint256 amountOut = _deriveAmountOut(token, usdt, _amountIn);
+            amountOut = (amountOut * 10 ** 18) / 10 ** _usdtDecimals;
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _usdtDecimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
 
             return (amountOut, amountOutNormal.toInt256());
         }
@@ -105,19 +107,20 @@ contract MoniswapVolatilePriceSource is PriceSource {
     function _getUnitValueInDAI(address token) internal view override returns (uint256, int256) {
         (uint256 _valueInETH, ) = _getUnitValueInETH(token);
         uint256 _ethDAIAmountOut = _deriveAmountOut(weth, dai, _valueInETH);
+        uint8 _daiDecimals = ERC20(dai).decimals();
+        _ethDAIAmountOut = (_ethDAIAmountOut * 10 ** 18) / 10 ** _daiDecimals;
 
         if (_valueInETH > 0 && _ethDAIAmountOut > 0) {
-            uint8 _decimals = ERC20(dai).decimals();
             uint256 amountOutEXP4 = _ethDAIAmountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _decimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
             return (_ethDAIAmountOut, amountOutNormal.toInt256());
         } else {
-            uint8 _decimals = ERC20(token).decimals();
-            uint8 _daiDecimals = ERC20(dai).decimals();
-            uint256 _amountIn = 1 * 10 ** _decimals;
+            uint8 _tokenDecimals = ERC20(token).decimals();
+            uint256 _amountIn = 1 * 10 ** _tokenDecimals;
             uint256 amountOut = _deriveAmountOut(token, dai, _amountIn);
+            amountOut = (amountOut * 10 ** 18) / 10 ** _daiDecimals;
             uint256 amountOutEXP4 = amountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** _daiDecimals);
+            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
 
             return (amountOut, amountOutNormal.toInt256());
         }

@@ -1,0 +1,11 @@
+{
+  "80084": {
+    "moniswap": {
+      "factory": "0xa933091dd8b94D07cE68DF5eA96822A45e3EA819",
+      "usdc": "0xd6D83aF58a19Cd14eF3CF6fe848C9A4d21e5727c",
+      "usdt": "0x05D0dD5135E3eF3aDE32a9eF9Cb06e8D37A6795D",
+      "dai": "0x806Ef538b228844c73E8E692ADCFa8Eb2fCF729c",
+      "weth": "0x7507c1dc16935B82698e4C63f2746A2fCf994dF8"
+    }
+  }
+}

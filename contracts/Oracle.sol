@@ -8,6 +8,8 @@ contract Oracle is Ownable {
 
     IPriceSource[] public priceSources;
 
+    event SetPriceSources(IPriceSource[] priceSources);
+
     constructor(IPriceSource[] memory _priceSources) Ownable(_msgSender()) {
         setPriceSources(_priceSources);
     }
@@ -29,6 +31,7 @@ contract Oracle is Ownable {
 
     function setPriceSources(IPriceSource[] memory _priceSources) public onlyOwner {
         priceSources = _priceSources;
+        emit SetPriceSources(_priceSources);
     }
 
     function getAllPriceSources() external view returns (IPriceSource[] memory) {
@@ -48,7 +51,7 @@ contract Oracle is Ownable {
         return (_totalValueEXP / priceSources.length, _totalValueNormal / int256(priceSources.length));
     }
 
-    function getAverageValueInUSD(
+    function getAverageValueInUSDBySource(
         IPriceSource _pS,
         address _token,
         uint256 _value
@@ -70,7 +73,7 @@ contract Oracle is Ownable {
         return (_totalValueEXP / priceSources.length, _totalValueNormal / int256(priceSources.length));
     }
 
-    function getAverageValueInAllStables(
+    function getAverageValueInAllStablesBySource(
         IPriceSource _pS,
         address _token,
         uint256 _value
@@ -113,7 +116,7 @@ contract Oracle is Ownable {
     }
 
     function getUnitValueInAllStables(address _token) external view returns (UnitValueInStablesPerSource[] memory) {
-        UnitValueInStablesPerSource[] memory _values;
+        UnitValueInStablesPerSource[] memory _values = new UnitValueInStablesPerSource[](priceSources.length);
 
         for (uint i = 0; i < priceSources.length; i++) {
             IPriceSource pS = priceSources[i];
@@ -141,7 +144,7 @@ contract Oracle is Ownable {
         return _values;
     }
 
-    function getUnitValueInAllStables(
+    function getUnitValueInAllStablesBySource(
         IPriceSource _pS,
         address _token
     ) external view returns (UnitValueInStablesPerSource memory _values) {
