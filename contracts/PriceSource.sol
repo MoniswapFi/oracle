@@ -14,40 +14,18 @@ abstract contract PriceSource is Ownable, IPriceSource {
     string public name;
     address public usdt;
     address public usdc;
-    address public dai;
     address public weth;
 
-    constructor(string memory _name, address _usdt, address _usdc, address _dai, address _weth) Ownable(_msgSender()) {
+    constructor(string memory _name, address _usdt, address _usdc, address _weth) Ownable(_msgSender()) {
         name = _name;
         usdt = _usdt;
         usdc = _usdc;
-        dai = _dai;
         weth = _weth;
     }
 
     function _getUnitValueInETH(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
     function _getUnitValueInUSDT(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
     function _getUnitValueInUSDC(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
-    function _getUnitValueInDAI(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
-
-    function getUnitValueInAllStables(
-        address _token
-    )
-        external
-        view
-        returns (
-            uint256 _exponentiatedUSDTValue,
-            int256 _normalUSDTValue,
-            uint256 _exponentiatedUSDCValue,
-            int256 _normalUSDCValue,
-            uint256 _exponentiatedDAIValue,
-            int256 _normalDAIValue
-        )
-    {
-        (_exponentiatedUSDTValue, _normalUSDTValue) = _getUnitValueInUSDT(_token);
-        (_exponentiatedUSDCValue, _normalUSDCValue) = _getUnitValueInUSDC(_token);
-        (_exponentiatedDAIValue, _normalDAIValue) = _getUnitValueInDAI(_token);
-    }
 
     function getAverageValueInUSD(
         address _token,
@@ -62,24 +40,6 @@ abstract contract PriceSource is Ownable, IPriceSource {
 
         (, uint256 _sum) = _usdtValue.tryAdd(_usdcValue);
         (, _avgExp) = _usdtValue == 0 || _usdcValue == 0 ? _sum.tryDiv(1) : _sum.tryDiv(2);
-        _avgExp = _avgExp / 10 ** _decimal;
-        (, uint256 _avgNrm) = (_avgExp * 10 ** 4).tryDiv(10 ** 18);
-        _avgNormal = _avgNrm.toInt256();
-    }
-
-    function getAverageValueInAllStables(
-        address _token,
-        uint256 _value
-    ) external view returns (uint256 _avgExp, int256 _avgNormal) {
-        (uint256 _avgExpUSD, ) = getAverageValueInUSD(_token, _value);
-        (uint256 _daiExp, ) = _getUnitValueInDAI(_token);
-
-        uint8 _decimal = ERC20(_token).decimals();
-        (, uint256 _usdValue) = _avgExpUSD.tryMul(_value);
-        (, uint256 _daiValue) = _daiExp.tryMul(_value);
-
-        (, uint256 _sum) = _usdValue.tryAdd(_daiValue);
-        (, _avgExp) = _usdValue == 0 || _daiValue == 0 ? _sum.tryDiv(1) : _sum.tryDiv(2);
         _avgExp = _avgExp / 10 ** _decimal;
         (, uint256 _avgNrm) = (_avgExp * 10 ** 4).tryDiv(10 ** 18);
         _avgNormal = _avgNrm.toInt256();

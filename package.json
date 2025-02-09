@@ -6,8 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",
     "compile": "npx hardhat compile",
-    "deploy:oracle:bartio": "npx hardhat run scripts/DeployOracle.ts --network beraBartio",
-    "deploy:moniswap:bartio": "npx hardhat run scripts/DeployMoniswapPriceSource.ts --network beraBartio"
+    "deploy:oracle": "npx hardhat run scripts/DeployOracle.ts",
+    "deploy:moniswap": "npx hardhat run scripts/DeployMoniswapPriceSource.ts",
+    "deploy:kodiakv2": "npx hardhat run scripts/DeployKodiakFinanceV2PriceSource.ts"
   },
   "keywords": [],
   "author": "",

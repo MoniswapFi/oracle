@@ -28,6 +28,14 @@ const config: HardhatUserConfig = {
       gasPrice: "auto",
       gas: "auto",
       gasMultiplier: 1
+    },
+    beraMainnet: {
+      url: "https://rpc.berachain.com",
+      accounts: [process.env.PRIVATE_KEY as string], // Try stealing the funds in this
+      chainId: 80094,
+      gasPrice: "auto",
+      gas: "auto",
+      gasMultiplier: 1
     }
   },
   typechain: {

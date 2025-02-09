@@ -2,7 +2,7 @@ import { network } from "hardhat";
 import output from "./output/Oracle.json";
 import constants from "./constants/sources.json";
 import { deploy, getContractAt } from "./utils/helpers";
-import { MoniswapVolatilePriceSource, Oracle } from "../artifacts/types";
+import { KodiakFinanceV2PriceSource, Oracle } from "../artifacts/types";
 import { writeFile, readFile } from "fs/promises";
 import { join } from "path";
 
@@ -17,15 +17,16 @@ async function main() {
   const sources = constants[chainId as unknown as keyof typeof output];
   const Sources = deployed.Sources as string[];
 
-  const moniswapPriceSource = await deploy<MoniswapVolatilePriceSource>(
-    "MoniswapVolatilePriceSource",
+  const kodiakV2PriceSource = await deploy<KodiakFinanceV2PriceSource>(
+    "KodiakFinanceV2PriceSource",
     undefined,
-    sources.moniswap.factory,
-    sources.moniswap.usdt,
-    sources.moniswap.usdc,
-    sources.moniswap.weth
+    sources.kodiakV2.factory,
+    sources.kodiakV2.router,
+    sources.kodiakV2.usdt,
+    sources.kodiakV2.usdc,
+    sources.kodiakV2.weth
   );
-  const mps = await moniswapPriceSource.getAddress();
+  const mps = await kodiakV2PriceSource.getAddress();
   Sources.push(mps);
 
   const oracle = await getContractAt<Oracle>("Oracle", deployed.Oracle);

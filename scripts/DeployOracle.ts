@@ -3,6 +3,7 @@ import { deploy } from "./utils/helpers";
 import { writeFile, readFile } from "fs/promises";
 import { join } from "path";
 import { Oracle as OracleContract } from "../artifacts/types";
+import ou from "./output/Oracle.json";
 
 interface OracleOutput {
   Sources: string[];
@@ -11,7 +12,8 @@ interface OracleOutput {
 
 async function main() {
   const chainId = network.config.chainId as number;
-  const Sources: string[] = [];
+  const deployed = ou[chainId as unknown as keyof typeof ou];
+  const Sources: string[] = deployed.Sources;
 
   const oracle = await deploy<OracleContract>("Oracle", undefined, Sources);
   const Oracle = await oracle.getAddress();

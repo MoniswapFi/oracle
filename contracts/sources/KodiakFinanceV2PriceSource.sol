@@ -6,30 +6,31 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Numerals} from "../libraries/Numerals.sol";
 
-contract MoniswapVolatilePriceSource is PriceSource {
+contract KodiakFinanceV2PriceSource is PriceSource {
     using Address for address;
     using Numerals for uint256;
     using Numerals for int256;
     using Math for uint256;
 
     address public immutable factory;
+    address public immutable router;
 
-    bytes4 public constant getPoolSelector = bytes4(keccak256(bytes("getPool(address,address,bool)")));
-    bytes4 public constant getAmountOutSelector = bytes4(keccak256("getAmountOut(uint256,address)"));
+    bytes4 public constant getPoolSelector = bytes4(keccak256(bytes("getPair(address,address)")));
+    bytes4 public constant getAmountOutSelector = bytes4(keccak256("getAmountsOut(uint,address[])"));
 
     constructor(
         address _factory,
+        address _router,
         address _usdt,
         address _usdc,
         address _weth
-    ) PriceSource("Moniswap", _usdt, _usdc, _weth) {
+    ) PriceSource("Kodiak Finance V2", _usdt, _usdc, _weth) {
         factory = _factory;
+        router = _router;
     }
 
     function _getPool(address token0, address token1) internal view returns (address _poolAddress) {
-        bytes memory _returnData = factory.functionStaticCall(
-            abi.encodeWithSelector(getPoolSelector, token0, token1, false)
-        );
+        bytes memory _returnData = factory.functionStaticCall(abi.encodeWithSelector(getPoolSelector, token0, token1));
         _poolAddress = abi.decode(_returnData, (address));
     }
 
@@ -41,11 +42,16 @@ contract MoniswapVolatilePriceSource is PriceSource {
         address pool = _getPool(token0, token1);
 
         if (pool != address(0)) {
-            bytes memory _returnData = pool.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _amountIn, token0)
+            address[] memory path;
+            path[0] = token0;
+            path[1] = token1;
+
+            bytes memory _returnData = router.functionStaticCall(
+                abi.encodeWithSelector(getAmountOutSelector, _amountIn, path)
             );
 
-            amountOut = abi.decode(_returnData, (uint256));
+            uint256[] memory amountsOut = abi.decode(_returnData, (uint256[]));
+            amountOut = amountsOut[amountsOut.length - 1];
         }
     }
 
