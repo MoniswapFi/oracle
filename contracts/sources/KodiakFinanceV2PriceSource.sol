@@ -13,20 +13,17 @@ contract KodiakFinanceV2PriceSource is PriceSource {
     using Math for uint256;
 
     address public immutable factory;
-    address public immutable router;
 
     bytes4 public constant getPoolSelector = bytes4(keccak256(bytes("getPair(address,address)")));
-    bytes4 public constant getAmountOutSelector = bytes4(keccak256("getAmountsOut(uint,address[])"));
+    bytes4 public constant getReservesSelector = bytes4(keccak256(bytes("getReserves()")));
 
     constructor(
         address _factory,
-        address _router,
         address _usdt,
         address _usdc,
         address _weth
     ) PriceSource("Kodiak Finance V2", _usdt, _usdc, _weth) {
         factory = _factory;
-        router = _router;
     }
 
     function _getPool(address token0, address token1) internal view returns (address _poolAddress) {
@@ -39,73 +36,63 @@ contract KodiakFinanceV2PriceSource is PriceSource {
         address token1,
         uint256 _amountIn
     ) internal view returns (uint256 amountOut) {
+        if (token0 == weth && token1 == weth) return 1 ether;
+        if (token0 == token1) return _amountIn;
+
+        (address tokenA, ) = sortTokens(token0, token1);
         address pool = _getPool(token0, token1);
 
         if (pool != address(0)) {
-            address[] memory path;
-            path[0] = token0;
-            path[1] = token1;
+            bytes memory _reservesData = pool.functionStaticCall(abi.encodeWithSelector(getReservesSelector));
 
-            bytes memory _returnData = router.functionStaticCall(
-                abi.encodeWithSelector(getAmountOutSelector, _amountIn, path)
-            );
+            (uint256 reserve0, uint256 reserve1) = abi.decode(_reservesData, (uint256, uint256));
 
-            uint256[] memory amountsOut = abi.decode(_returnData, (uint256[]));
-            amountOut = amountsOut[amountsOut.length - 1];
+            if (reserve0 == 0 || reserve1 == 0) amountOut = 0;
+            else {
+                (uint256 reserveA, uint256 reserveB) = token0 == tokenA ? (reserve0, reserve1) : (reserve1, reserve0);
+                uint256 amountInWithFee = _amountIn * (1000 - 25);
+                uint256 numerator = amountInWithFee * reserveB;
+                uint256 denominator = (reserveA * 1000) + amountInWithFee;
+                amountOut = numerator / denominator;
+            }
         }
     }
 
-    function _getUnitValueInETH(address token) internal view override returns (uint256, int256) {
+    function _getUnitValueInETH(address token) internal view override returns (uint256 amountOut) {
         uint8 _decimals = ERC20(token).decimals();
         uint256 _amountIn = 1 * 10 ** _decimals;
-        uint256 amountOut = _deriveAmountOut(token, weth, _amountIn);
-        uint256 amountOutEXP4 = amountOut * 10 ** 4;
-        (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
-
-        return (amountOut, amountOutNormal.toInt256());
+        amountOut = _deriveAmountOut(token, weth, _amountIn);
     }
 
-    function _getUnitValueInUSDC(address token) internal view override returns (uint256, int256) {
-        (uint256 _valueInETH, ) = _getUnitValueInETH(token);
+    function _getUnitValueInUSDC(address token) internal view override returns (uint256) {
+        uint256 _valueInETH = _getUnitValueInETH(token);
         uint256 _ethUSDCAmountOut = _deriveAmountOut(weth, usdc, _valueInETH);
-        uint8 _usdcDecimals = ERC20(usdc).decimals();
-        _ethUSDCAmountOut = (_ethUSDCAmountOut * 10 ** 18) / 10 ** _usdcDecimals;
 
-        if (_valueInETH > 0 && _ethUSDCAmountOut > 0) {
-            uint256 amountOutEXP4 = _ethUSDCAmountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
-            return (_ethUSDCAmountOut, amountOutNormal.toInt256());
+        if (_ethUSDCAmountOut > 0) {
+            return _ethUSDCAmountOut;
         } else {
             uint8 _tokenDecimals = ERC20(token).decimals();
             uint256 _amountIn = 1 * 10 ** _tokenDecimals;
             uint256 amountOut = _deriveAmountOut(token, usdc, _amountIn);
-            amountOut = (amountOut * 10 ** 18) / 10 ** _usdcDecimals;
-            uint256 amountOutEXP4 = amountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
-
-            return (amountOut, amountOutNormal.toInt256());
+            return amountOut;
         }
     }
 
-    function _getUnitValueInUSDT(address token) internal view override returns (uint256, int256) {
-        (uint256 _valueInETH, ) = _getUnitValueInETH(token);
+    function _getUnitValueInUSDT(address token) internal view override returns (uint256) {
+        uint256 _valueInETH = _getUnitValueInETH(token);
         uint256 _ethUSDTAmountOut = _deriveAmountOut(weth, usdt, _valueInETH);
-        uint8 _usdtDecimals = ERC20(usdt).decimals();
-        _ethUSDTAmountOut = (_ethUSDTAmountOut * 10 ** 18) / 10 ** _usdtDecimals;
 
-        if (_valueInETH > 0 && _ethUSDTAmountOut > 0) {
-            uint256 amountOutEXP4 = _ethUSDTAmountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
-            return (_ethUSDTAmountOut, amountOutNormal.toInt256());
+        if (_ethUSDTAmountOut > 0) {
+            return _ethUSDTAmountOut;
         } else {
             uint8 _tokenDecimals = ERC20(token).decimals();
             uint256 _amountIn = 1 * 10 ** _tokenDecimals;
             uint256 amountOut = _deriveAmountOut(token, usdt, _amountIn);
-            amountOut = (amountOut * 10 ** 18) / 10 ** _usdtDecimals;
-            uint256 amountOutEXP4 = amountOut * 10 ** 4;
-            (, uint256 amountOutNormal) = amountOutEXP4.tryDiv(10 ** 18);
-
-            return (amountOut, amountOutNormal.toInt256());
+            return amountOut;
         }
+    }
+
+    function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
+        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
     }
 }

@@ -49,7 +49,7 @@ contract Oracle is Ownable {
             (uint256 _valueEXP, int256 _valueNormal) = pS.getAverageValueInUSD(_token, _value);
             (_totalValueEXP, _totalValueNormal) = (_totalValueEXP + _valueEXP, _totalValueNormal + _valueNormal);
 
-            if (_valueEXP != 0) {
+            if (_valueEXP != 0 && i != 0) {
                 _divisor += 1;
             }
         }
@@ -77,7 +77,7 @@ contract Oracle is Ownable {
             (uint256 _valueEXP, int256 _valueNormal) = pS.getValueInETH(_token, _value);
             (_totalValueEXP, _totalValueNormal) = (_totalValueEXP + _valueEXP, _totalValueNormal + _valueNormal);
 
-            if (_valueEXP != 0) {
+            if (_valueEXP != 0 && i != 0) {
                 _divisor += 1;
             }
         }

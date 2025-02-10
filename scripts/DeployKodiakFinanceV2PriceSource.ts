@@ -21,7 +21,6 @@ async function main() {
     "KodiakFinanceV2PriceSource",
     undefined,
     sources.kodiakV2.factory,
-    sources.kodiakV2.router,
     sources.kodiakV2.usdt,
     sources.kodiakV2.usdc,
     sources.kodiakV2.weth

@@ -23,37 +23,36 @@ abstract contract PriceSource is Ownable, IPriceSource {
         weth = _weth;
     }
 
-    function _getUnitValueInETH(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
-    function _getUnitValueInUSDT(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
-    function _getUnitValueInUSDC(address _token) internal view virtual returns (uint256 _exponentiated, int256 _normal);
+    function _getUnitValueInETH(address _token) internal view virtual returns (uint256);
+    function _getUnitValueInUSDT(address _token) internal view virtual returns (uint256);
+    function _getUnitValueInUSDC(address _token) internal view virtual returns (uint256);
 
     function getAverageValueInUSD(
         address _token,
         uint256 _value
     ) public view returns (uint256 _avgExp, int256 _avgNormal) {
-        (uint256 _usdtExp, ) = _getUnitValueInUSDT(_token);
-        (uint256 _usdcExp, ) = _getUnitValueInUSDC(_token);
-
+        uint256 usdtValue = _getUnitValueInUSDT(_token) * _value;
+        uint256 usdcValue = _getUnitValueInUSDC(_token) * _value;
         uint8 _decimal = ERC20(_token).decimals();
-        (, uint256 _usdtValue) = _usdtExp.tryMul(_value);
-        (, uint256 _usdcValue) = _usdcExp.tryMul(_value);
 
-        (, uint256 _sum) = _usdtValue.tryAdd(_usdcValue);
-        (, _avgExp) = _usdtValue == 0 || _usdcValue == 0 ? _sum.tryDiv(1) : _sum.tryDiv(2);
-        _avgExp = _avgExp / 10 ** _decimal;
-        (, uint256 _avgNrm) = (_avgExp * 10 ** 4).tryDiv(10 ** 18);
-        _avgNormal = _avgNrm.toInt256();
+        uint8 usdcDecimals = ERC20(usdc).decimals();
+        uint8 usdtDecimals = ERC20(usdt).decimals();
+
+        uint256 sum = (((usdcValue / 10 ** usdcDecimals) + (usdtValue / 10 ** usdtDecimals)) * 10 ** 18) /
+            10 ** _decimal;
+        uint256 average = usdcValue == 0 || usdtValue == 0 ? sum / 1 : sum / 2;
+        int256 averageAsInt256 = int256((average * 10 ** 4) / 10 ** 18);
+        _avgExp = average;
+        _avgNormal = averageAsInt256;
     }
 
     function getValueInETH(
         address _token,
         uint256 _value
     ) external view returns (uint256 _exponentiated, int256 _normal) {
-        (uint256 _valueInETH, ) = _getUnitValueInETH(_token);
+        uint256 valueInETH = _getUnitValueInETH(_token) * _value;
         uint8 _decimal = ERC20(_token).decimals();
-        (, _exponentiated) = _valueInETH.tryMul(_value);
-        _exponentiated = _exponentiated / 10 ** _decimal;
-        (, uint256 _nrm) = (_exponentiated * 10 ** 4).tryDiv(10 ** 18);
-        _normal = _nrm.toInt256();
+        _exponentiated = valueInETH / 10 ** _decimal;
+        _normal = int256((_exponentiated * 10 ** 4) / 10 ** 18);
     }
 }
