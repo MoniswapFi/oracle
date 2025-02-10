@@ -1,0 +1,14 @@
+{
+  "80084": {
+    "Oracle": "0x6D2015Dce2d839c23806278E4DA30500766AC44D",
+    "Sources": [
+      "0xd25758eD9D4555ceb2A3c27374aE08Cd470b6Fe3"
+    ]
+  },
+  "80094": {
+    "Oracle": "0xCA6f864adD2cF45bf2b28FBbC990216Cc759B0Ca",
+    "Sources": [
+      "0x34D9a3E8B5Df4DEdB388EB14b7416f76BFFf4E6f"
+    ]
+  }
+}
